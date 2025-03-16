@@ -10,7 +10,7 @@ MANPREFIX = $(PREFIX)/share/man
 HAVE_SYSTEMD = 1
 HAVE_ELOGIND = 0
 
-cflags = -Wall -pedantic $(CFLAGS)
+cflags = -Wall -pedantic -D_DEFAULT_SOURCE $(CFLAGS)
 cppflags = -I. $(CPPFLAGS) -D_XOPEN_SOURCE=500 \
   -DHAVE_SYSTEMD=$(HAVE_SYSTEMD) -DHAVE_ELOGIND=$(HAVE_ELOGIND)
 

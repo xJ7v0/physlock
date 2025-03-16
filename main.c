@@ -117,6 +117,10 @@ int main(int argc, char **argv) {
 	if (geteuid() != 0)
 		error(EXIT_FAILURE, 0, "Must be root!");
 
+	if(is_process_running())
+		error(EXIT_FAILURE, 0, "physlock already running");
+
+
 	setup_signal(SIGTERM, sa_handler_exit);
 	setup_signal(SIGQUIT, sa_handler_exit);
 	setup_signal(SIGHUP, SIG_IGN);

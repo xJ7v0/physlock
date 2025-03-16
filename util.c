@@ -19,10 +19,14 @@
 
 #include "physlock.h"
 
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <dirent.h>
+
+#define EXE_NAME "physlock"
 
 const char *progname;
 
@@ -139,3 +143,49 @@ CLEANUP ssize_t write_int_to_file(const char *path, int value) {
 	return write_file(path, buf, strlen(buf));
 }
 
+/*
+ * Check to see if physlock is running.
+ * Return 1 if running, Return 0 if not running.
+ */
+int is_process_running() {
+	DIR *dir;
+	struct dirent *entry;
+	char cmdline[PATH_MAX];
+
+	pid_t pid = getpid();
+
+	dir = opendir("/proc");
+	if (!dir)
+	{
+		perror("opendir");
+		return -1;
+	}
+
+	// Loop over all directories in /proc
+	while ((entry = readdir(dir)) != NULL)
+	{
+		// Only look at directories with numeric names (representing process IDs)
+		if (entry->d_type == DT_DIR && pid != atoi(entry->d_name) && atoi(entry->d_name) != 0)
+		{
+			snprintf(cmdline, sizeof(cmdline), "/proc/%s/cmdline", entry->d_name);
+			FILE *fp = fopen(cmdline, "r");
+			if (fp)
+			{
+				char process[256];
+				if (fgets(process, sizeof(process), fp))
+				{
+					if (strstr(process, EXE_NAME) != NULL)
+					{
+						fclose(fp);
+						closedir(dir);
+						return 1;
+					}
+				}
+				fclose(fp);
+			}
+		}
+	}
+
+	closedir(dir);
+	return 0;
+}
